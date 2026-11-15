@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Frontend v2.0</title>
+    <style>
+        body { font-family: sans-serif; max-width: 640px; margin: 2rem auto; }
+        input, button { padding: 6px 10px; margin: 4px 0; }
+        pre { background: #f4f4f4; padding: 10px; border-radius: 6px; }
+        section { margin-bottom: 2rem; }
+    </style>
+</head>
+<body>
+    <h1>Frontend v2.0</h1>
+    
+    <section>
+        <h2>Отправка данных</h2>
+        <input id="input" type="text" placeholder="Введите текст">
+        <button id="send">Отправить</button>
+        <h3>Ответ сервера:</h3>
+        <pre id="sendLog"></pre>
+    </section>
+
+    <section>
+        <h2>Просмотр сохранённых данных</h2>
+        <input id="filter" type="text" placeholder="Необязательный фильтр">
+        <button id="load">Загрузить данные</button>
+        <h3>Содержимое data.txt:</h3>
+        <pre id="loadLog"></pre>
+    </section>
+
+    <script>
+        const API = "http://127.0.0.1:5000/api/data";
+
+
+        document.getElementById("send").addEventListener("click", async () => {
+            const text = document.getElementById("input").value;
+            try {
+                const res = await fetch(API, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ text })
+                });
+                const data = await res.json();
+                document.getElementById("sendLog").textContent = JSON.stringify(data, null, 2);
+            } catch (e) {
+                document.getElementById("sendLog").textContent = "Ошибка: " + e.message;
+            }
+        });
+
+
+        document.getElementById("load").addEventListener("click", async () => {
+            const filter = document.getElementById("filter").value.toLowerCase();
+            try {
+                const res = await fetch(API, { method: "GET" });
+                if (!res.ok) {
+                    document.getElementById("loadLog").textContent = "Ошибка сервера: " + res.status;
+                    return;
+                }
+                const data = await res.json();
+                const items = (data.content || []).filter(s => s.toLowerCase().includes(filter));
+                document.getElementById("loadLog").textContent = items.length ? items.join("\n") : "(пусто)";
+            } catch (e) {
+                document.getElementById("loadLog").textContent = "Ошибка: " + e.message;
+            }
+        });
+    </script>
+</body>
+</html>
